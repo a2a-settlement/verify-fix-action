@@ -1,0 +1,82 @@
+name: Verify security fix
+description: >-
+  Ask SettleBridge to verify that a pull request fixes a security advisory,
+  publish the verdict as a check run, and upload the signed receipt.
+author: SettleBridge
+
+# Workflow permissions this action needs:
+#   id-token: write
+#   checks: write
+#   contents: read
+
+branding:
+  icon: shield
+  color: blue
+
+inputs:
+  api-url:
+    description: >-
+      SettleBridge origin, without a path. The OIDC token is sent only to this
+      origin.
+    required: false
+    default: https://settlebridge.ai
+  vuln-id:
+    description: >-
+      Advisory id, such as a GHSA, CVE, or PYSEC id. Required unless the pull
+      request title or body contains exactly one of those ids.
+    required: false
+  package:
+    description: PyPI package name the advisory applies to. Pure-Python projects only.
+    required: true
+  alert-ref:
+    description: Optional Dependabot or GitHub advisory alert reference. Sent as alert_ref.
+    required: false
+    default: ''
+  base-sha:
+    description: >-
+      Vulnerable base commit as 40 hex characters. Defaults to the pull request
+      base SHA.
+    required: false
+    default: ''
+  fix-sha:
+    description: >-
+      Fix commit as 40 hex characters. Defaults to the pull request head SHA.
+      The check run is attached to this commit.
+    required: false
+    default: ''
+  timeout-minutes:
+    description: >-
+      How long to wait for a terminal verdict, from 0 to 360 minutes. 0 does
+      not wait after a non-terminal response. Default 30.
+    required: false
+    default: '30'
+  fail-on:
+    description: >-
+      Which verdicts fail the job and the check. incomplete (default) fails
+      when the fix is incomplete. inconclusive also fails on an inconclusive
+      verdict. never reports the verdict and does not fail because of it.
+      Opt-in, timeout, and transport errors still fail the job.
+    required: false
+    default: incomplete
+  upload-receipt:
+    description: >-
+      Upload the signed receipt JSON as a workflow artifact when SettleBridge
+      has one.
+    required: false
+    default: 'true'
+
+outputs:
+  verdict:
+    description: >-
+      verified, incomplete_fix_confirmed, inconclusive, or empty when there is
+      no verdict.
+  inconclusive-reason:
+    description: Reason returned with an inconclusive or failed verification. Empty otherwise.
+  receipt-id:
+    description: Receipt id when SettleBridge issued one.
+  verification-id:
+    description: SettleBridge verification id.
+
+runs:
+  using: node20
+  main: dist/index.js
